@@ -1562,6 +1562,20 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
             intercept_init=None,
         )
 
+    def plot_loss_history(self, loss_history):
+        loss_list = []
+        for line in loss_history.split('\n'):
+            if "loss: " in line:
+                loss = line.split("loss: ")[-1].split(" ")[0]
+                loss_list.append(float(loss))
+    
+        plt.figure()
+        plt.plot(np.arange(len(loss_list)), loss_list)
+        plt.xlabel("Time in epochs")
+        plt.ylabel("Loss")
+        plt.title("Training Loss over Epochs")
+        plt.show()
+
     def _fit(
         self,
         X,
@@ -1574,6 +1588,12 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
         intercept_init=None,
         sample_weight=None,
     ):
+
+        # Start capturing stdout
+        old_stdout = sys.stdout
+        mystdout = StringIO()
+        sys.stdout = mystdout
+
         # TODO(1.7) remove 0 from average parameter constraint
         if not isinstance(self.average, (bool, np.bool_)) and self.average == 0:
             warnings.warn(
@@ -1595,7 +1615,8 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
 
         # Clear iteration count for multiple call to fit.
         self.t_ = 1.0
-
+        
+    try:
         self._partial_fit(
             X,
             y,
@@ -1609,6 +1630,13 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
             intercept_init,
         )
 
+    finally:
+        # Reset stdout to capture the training output and ensure stdout is reset even if an error occurs
+        sys.stdout = old_stdout
+        loss_history = mystdout.getvalue()
+
+        # Parse the loss history and plot
+        self.plot_loss_history(loss_history)
         if (
             self.tol is not None
             and self.tol > -np.inf
