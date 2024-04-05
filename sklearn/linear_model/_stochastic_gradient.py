@@ -1615,8 +1615,7 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
 
         # Clear iteration count for multiple call to fit.
         self.t_ = 1.0
-        
-    try:
+
         self._partial_fit(
             X,
             y,
@@ -1630,7 +1629,6 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
             intercept_init,
         )
 
-    finally:
         # Reset stdout to capture the training output and ensure stdout is reset even if an error occurs
         sys.stdout = old_stdout
         loss_history = mystdout.getvalue()
